@@ -41,8 +41,25 @@ def conv2d_bn(x, filters, kernel_size=(3, 3), padding='same', strides=(1, 1), ac
         x = Activation(activation, name=name)(x)
         return x
 
-def MultiResBlock(inp, U, activation = 'relu', BN=True):
+def DepthwiseConv2D_bn(x, kernel_size, padding='same', strides=(1, 1), activation='relu', BN = False, name=None):
 
+    x = DepthwiseConv2D(kernel_size=kernel_size, strides = strides, padding=padding, activation=None, use_bias=True, depthwise_initializer = 'he_normal', bias_initializer = 'he_normal')(x)
+    if BN == True:
+        x = BatchNormalization(axis=3, scale=False)(x)
+    else:
+        pass
+
+    if activation == 'mish':
+        x = Mish()(x)
+        return x
+    elif activation == None:
+        return x
+    else:
+        x = Activation(activation, name=name)(x)
+        return x
+
+def MultiResBlock(inp, U, activation = 'relu', BN=True):
+    # U = U *1.67
     shortcut = inp
 
     shortcut = conv2d_bn(shortcut, int(U*0.167) + int(U*0.333) + int(U*0.5), (1, 1), activation=None, padding='same', BN=BN)
@@ -73,6 +90,50 @@ def MultiResBlock(inp, U, activation = 'relu', BN=True):
         out = BatchNormalization(axis=3)(out)
     else:
         pass
+
+    return out
+
+def ResPath(filters, length, inp, activation = 'relu', BN=False):
+
+    shortcut = inp
+    shortcut = conv2d_bn(shortcut, filters, (1, 1), activation=None, padding='same', BN=BN)
+
+    out = conv2d_bn(inp, filters, (3, 3), activation=activation, padding='same', BN=BN)
+
+    out = add([shortcut, out])
+
+    if activation == 'mish':
+        out = Mish()(out)
+    elif activation == None:
+        pass
+    else:
+        out = Activation(activation)(out)
+
+    if BN == True:
+        out = BatchNormalization(axis=3)(out)
+    else:
+        pass
+
+    for i in range(length-1):
+
+        shortcut = out
+        shortcut = conv2d_bn(shortcut, filters, (1, 1), activation=None, padding='same', BN=BN)
+
+        out = conv2d_bn(out, filters, (3, 3), activation=activation, padding='same', BN=BN)
+
+        out = add([shortcut, out])
+
+        if activation == 'mish':
+            out = Mish()(out)
+        elif activation == None:
+            pass
+        else:
+            out = Activation(activation)(out)
+        
+        if BN == True:
+            out = BatchNormalization(axis=3)(out)
+        else:
+            pass
 
     return out
 
@@ -203,14 +264,13 @@ def AFE_W_Net(pretrained_weights = None,input_size = (256,256,1)):
 
     model = Model(inputs = inputs, outputs = conv19)
     
-    model.summary()
+    # model.summary()
     
 
     if(pretrained_weights):
         model.load_weights(pretrained_weights)
 
     return model
-
 
 def six_fold_net(pretrained_weights = None ,input_size = (256,256,1)):
     kn = 17
@@ -356,7 +416,7 @@ def six_fold_net(pretrained_weights = None ,input_size = (256,256,1)):
 
     model = Model(inputs = inputs, outputs = conv28)
     
-    model.summary()
+    # model.summary()
 
     if(pretrained_weights):
         model.load_weights(pretrained_weights)
@@ -465,7 +525,7 @@ def SFE_W_Net(pretrained_weights = None,input_size = (256,256,1)):
 
     model = Model(inputs = inputs, outputs = conv19)
     
-    model.summary()
+    # model.summary()
 
     if(pretrained_weights):
         model.load_weights(pretrained_weights)
@@ -574,7 +634,7 @@ def CFE_W_Net(pretrained_weights = None,input_size = (256,256,1)):
 
     model = Model(inputs = inputs, outputs = conv19)
     
-    model.summary()
+    # model.summary()
     
 
     if(pretrained_weights):
@@ -672,7 +732,7 @@ def AFE_W_Net_A(pretrained_weights = None,input_size = (256,256,1)):
 
     model = Model(inputs = inputs, outputs = conv19)
     
-    model.summary()
+    # model.summary()
     
 
     if(pretrained_weights):
@@ -738,3 +798,57 @@ def AFE_MRUNet(pretrained_weights = None,input_size = (256,256,1)):
 
     return model
 
+def AFE_MRUNet_A(pretrained_weights = None,input_size = (256,256,1)):
+    kn = 45
+    km1 = int(kn*0.167) + int(kn*0.333) + int(kn*0.5)
+    km2 = int(kn*2*0.167) + int(kn*2*0.333) + int(kn*2*0.5)
+    km3 = int(kn*4*0.167) + int(kn*4*0.333) + int(kn*4*0.5)
+    km4 = int(kn*8*0.167) + int(kn*8*0.333) + int(kn*8*0.5)
+
+
+    size0 = input_size[0]
+    size1 = input_size[1]
+
+    inputs = Input(input_size)
+
+    mresblock1 = MultiResBlock(inputs, kn)
+    pool1 = MaxPooling2D(pool_size=(2, 2))(mresblock1)
+    mresblock1 = AFE(mresblock1, km1, reshape_size = (1, 1, km1))
+
+    mresblock2 = MultiResBlock(pool1, kn*2)
+    pool2 = MaxPooling2D(pool_size=(2, 2))(mresblock2)
+    mresblock2 = AFE(mresblock2, km2, reshape_size = (1, 1, km2))
+
+    mresblock3 = MultiResBlock(pool2, kn*4)
+    pool3 = MaxPooling2D(pool_size=(2, 2))(mresblock3)
+    mresblock3 = AFE(mresblock3, km3, reshape_size = (1, 1, km3))
+
+    mresblock4 = MultiResBlock(pool3, kn*8)
+    pool4 = MaxPooling2D(pool_size=(2, 2))(mresblock4)
+    mresblock4 = AFE(mresblock4, km4, reshape_size = (1, 1, km4))
+
+    mresblock5 = MultiResBlock(pool4, kn*16)
+
+    up6 = concatenate([Conv2DTranspose(kn*8, (2, 2), strides=(2, 2), padding='same')(mresblock5), mresblock4], axis=3)
+    mresblock6 = MultiResBlock(up6, kn*8)
+
+    up7 = concatenate([Conv2DTranspose(kn*4, (2, 2), strides=(2, 2), padding='same')(mresblock6), mresblock3], axis=3)
+    mresblock7 = MultiResBlock(up7, kn*4)
+
+    up8 = concatenate([Conv2DTranspose(kn*2, (2, 2), strides=(2, 2), padding='same')(mresblock7), mresblock2], axis=3)
+    mresblock8 = MultiResBlock(up8, kn*2)
+
+    up9 = concatenate([Conv2DTranspose(kn, (2, 2), strides=(2, 2), padding='same')(mresblock8), mresblock1], axis=3)
+    mresblock9 = MultiResBlock(up9, kn)
+
+    conv10 = conv2d_bn(mresblock9, 1, (1, 1), activation='sigmoid')
+    
+    model = Model(inputs = inputs, outputs = conv10)
+    
+    model.summary()
+    
+
+    if(pretrained_weights):
+        model.load_weights(pretrained_weights)
+
+    return model

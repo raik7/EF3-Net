@@ -14,7 +14,7 @@ from tensorflow.keras.models import model_from_json
 tst_path = '..\\test'
 image_resize = (256, 192)
 
-pre_model = MModel.EF3_WNet(input_size = (192,256,3))
+pre_model = models.EF3_WNet(input_size = (192,256,3))
 
 model = pre_model.load_weights('..\\model.h5')
 

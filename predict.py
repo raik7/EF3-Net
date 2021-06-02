@@ -14,7 +14,7 @@ from tensorflow.keras.models import model_from_json
 tst_path = '..\\test'
 image_resize = (256, 192)
 
-pre_model = MModel.MultiResUNet(pretrained_weights =None, input_size = (256,256,1))
+pre_model = MModel.MultiResUNet(input_size = (192,256,3))
 
 model = pre_model.load_weights('..\\model.h5')
 

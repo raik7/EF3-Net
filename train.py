@@ -3,24 +3,15 @@ import tensorflow as tf
 from tensorflow.keras.optimizers import *
 from tensorflow.keras.backend import clear_session
 import os
-import glob
-import skimage.io as io
-from PIL import Image
-from libtiff import TIFF
 import numpy as np
 import time
 from tqdm import tqdm
 import cv2
 import TrainStep
 import models
-import loss_function
 from tensorflow import keras
 import h5py
-
-
-gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
-print(gpus)
-tf.config.experimental.set_visible_devices(devices=gpus[0:1], device_type='GPU')
+from libtiff import TIFF
 
 
 img_path = '..\\Input'
@@ -28,9 +19,19 @@ msk_path = '..\\GroundTruth'
 tst_path = '..\\test'
 
 model_results_dir = '..\\results'
-
 if not os.path.exists(model_results_dir):
     os.makedirs(model_results_dir)
+
+
+pretrained_weights = None
+
+img_resize = (256,192)
+input_size = (192,256,3)
+
+epochs = 350
+batchSize = 8
+learning_rate = 1e-3
+
 
 img_files = next(os.walk(img_path))[2]
 msk_files = next(os.walk(msk_path))[2]
@@ -46,19 +47,20 @@ Z = []
 
 for img_fl in tqdm(img_files): 
     image = cv2.imread(img_path + '\\' + img_fl, cv2.IMREAD_COLOR)
-    resized_img = cv2.resize(image,(256, 192))
+    # image = cv2.imread(img_path + '\\' + img_fl, cv2.IMREAD_GRAYSCALE) # Grayscale input images
+    resized_img = cv2.resize(image, img_resize)
     X.append(resized_img)
 
 for img_fl in tqdm(msk_files): 
     mask = cv2.imread(msk_path + '\\' + img_fl, cv2.IMREAD_GRAYSCALE)
-    resized_msk = cv2.resize(mask,(256, 192))
+    resized_msk = cv2.resize(mask, img_resize)
     Y.append(resized_msk)
 
 for img_fl in tqdm(tst_files):    
     test = cv2.imread(tst_path + '\\' + img_fl, cv2.IMREAD_COLOR)
-    resized_tst = cv2.resize(test,(256, 192))
-    Z.append(test)
-
+    # test = cv2.imread(tst_path + '\\' + img_fl, cv2.IMREAD_GRAYSCALE)  # Grayscale input images
+    resized_tst = cv2.resize(test, img_resize)
+    Z.append(resized_tst)
 
 
 X = np.array(X)
@@ -75,6 +77,7 @@ y_shuffled = Y[shuffle_indices]
 
 x_shuffled = x_shuffled / 255
 y_shuffled = y_shuffled / 255
+y_shuffled = np.round(y_shuffled,0)
 Z = Z / 255
 
 print(x_shuffled.shape)
@@ -82,7 +85,6 @@ print(y_shuffled.shape)
 print(Z.shape)
 
 length = int(float(len(x_shuffled))/5)
-
 
 
 for i in range(0,5):
@@ -130,12 +132,11 @@ for i in range(0,5):
     y_train = np.concatenate((y_shuffled[:index-length],y_shuffled[index:]), axis=0)
     y_val = y_shuffled[index-length:index]
 
-    model = models.AFE_W_Net(pretrained_weights = None, input_size = (192, 256, 3))
+    model = models.AFE_W_Net(pretrained_weights = None, input_size = input_size)
 
     print ('iter: %s' % (str(i)))
-    model.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy', metrics=['accuracy']) 
-    history = LossHistory()
-    TrainStep.trainStep(model, x_train, y_train, x_val, y_val, epochs=350, batchSize=6, iters = i, results_save_path = model_results_dir, losshistory=None, reverse = False)
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy']) 
+    TrainStep.trainStep(model, x_train, y_train, x_val, y_val, epochs=epochs, batchSize=batchSize, iters = i, results_save_path = model_results_dir, losshistory=None, reverse = False)
 
     fp = open(model_results_dir +'\\best-jaccard-{}.txt'.format(i),'r')
     best = fp.read()

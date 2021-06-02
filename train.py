@@ -46,17 +46,23 @@ Y = []
 Z = []
 
 for img_fl in tqdm(img_files): 
+    # img = TIFF.open(img_path + '\\' + img_fl, mode='r')
+    # image = img.read_image()
     image = cv2.imread(img_path + '\\' + img_fl, cv2.IMREAD_COLOR)
     # image = cv2.imread(img_path + '\\' + img_fl, cv2.IMREAD_GRAYSCALE) # Grayscale input images
     resized_img = cv2.resize(image, img_resize)
     X.append(resized_img)
 
 for img_fl in tqdm(msk_files): 
+    # msk = TIFF.open(msk_path + '\\' + img_fl, mode='r')
+    # mask = msk.read_image()
     mask = cv2.imread(msk_path + '\\' + img_fl, cv2.IMREAD_GRAYSCALE)
     resized_msk = cv2.resize(mask, img_resize)
     Y.append(resized_msk)
 
-for img_fl in tqdm(tst_files):    
+for img_fl in tqdm(tst_files):  
+    # tst = TIFF.open(tst_path + '\\' + img_fl, mode='r')
+    # test = tst.read_image()
     test = cv2.imread(tst_path + '\\' + img_fl, cv2.IMREAD_COLOR)
     # test = cv2.imread(tst_path + '\\' + img_fl, cv2.IMREAD_GRAYSCALE)  # Grayscale input images
     resized_tst = cv2.resize(test, img_resize)

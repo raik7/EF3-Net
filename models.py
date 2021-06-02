@@ -59,7 +59,7 @@ def DepthwiseConv2D_bn(x, kernel_size, padding='same', strides=(1, 1), activatio
         return x
 
 def MultiResBlock(inp, U, activation = 'relu', BN=True):
-    # U = U *1.67
+
     shortcut = inp
 
     shortcut = conv2d_bn(shortcut, int(U*0.167) + int(U*0.333) + int(U*0.5), (1, 1), activation=None, padding='same', BN=BN)
@@ -93,50 +93,6 @@ def MultiResBlock(inp, U, activation = 'relu', BN=True):
 
     return out
 
-def ResPath(filters, length, inp, activation = 'relu', BN=False):
-
-    shortcut = inp
-    shortcut = conv2d_bn(shortcut, filters, (1, 1), activation=None, padding='same', BN=BN)
-
-    out = conv2d_bn(inp, filters, (3, 3), activation=activation, padding='same', BN=BN)
-
-    out = add([shortcut, out])
-
-    if activation == 'mish':
-        out = Mish()(out)
-    elif activation == None:
-        pass
-    else:
-        out = Activation(activation)(out)
-
-    if BN == True:
-        out = BatchNormalization(axis=3)(out)
-    else:
-        pass
-
-    for i in range(length-1):
-
-        shortcut = out
-        shortcut = conv2d_bn(shortcut, filters, (1, 1), activation=None, padding='same', BN=BN)
-
-        out = conv2d_bn(out, filters, (3, 3), activation=activation, padding='same', BN=BN)
-
-        out = add([shortcut, out])
-
-        if activation == 'mish':
-            out = Mish()(out)
-        elif activation == None:
-            pass
-        else:
-            out = Activation(activation)(out)
-        
-        if BN == True:
-            out = BatchNormalization(axis=3)(out)
-        else:
-            pass
-
-    return out
-
 def Channel_wise_FE(x, filters, reshape_size = (2,2,2)):
 
     cw = GlobalAveragePooling2D()(x)
@@ -167,7 +123,7 @@ def AFE(x, filters, reshape_size = (2,2,2)):
 
     return So
 
-def AFE_W_Net(pretrained_weights = None,input_size = (256,256,1)):
+def EF3_Net(pretrained_weights = None,input_size = (256,256,1)):
     kn = 32
     km1 = int(kn*0.167) +    int(kn*0.333) +    int(kn*0.5)
     km2 = int(kn*2*0.167) +  int(kn*2*0.333) +  int(kn*2*0.5)
@@ -642,7 +598,7 @@ def CFE_W_Net(pretrained_weights = None,input_size = (256,256,1)):
 
     return model
 
-def AFE_W_Net_A(pretrained_weights = None,input_size = (256,256,1)):
+def AFE_W_Net(pretrained_weights = None,input_size = (256,256,1)):
     kn = 24
     km1 = int(kn*0.167) +    int(kn*0.333) +    int(kn*0.5)
     km2 = int(kn*2*0.167) +  int(kn*2*0.333) +  int(kn*2*0.5)
@@ -740,7 +696,7 @@ def AFE_W_Net_A(pretrained_weights = None,input_size = (256,256,1)):
 
     return model
 
-def AFE_MRUNet(pretrained_weights = None,input_size = (256,256,1)):
+def EF_MRUNet(pretrained_weights = None,input_size = (256,256,1)):
     kn = 50
     km1 = int(kn*0.167) + int(kn*0.333) + int(kn*0.5)
     km2 = int(kn*2*0.167) + int(kn*2*0.333) + int(kn*2*0.5)
@@ -790,7 +746,7 @@ def AFE_MRUNet(pretrained_weights = None,input_size = (256,256,1)):
     
     model = Model(inputs = inputs, outputs = conv10)
     
-    model.summary()
+    # model.summary()
     
 
     if(pretrained_weights):
@@ -798,7 +754,7 @@ def AFE_MRUNet(pretrained_weights = None,input_size = (256,256,1)):
 
     return model
 
-def AFE_MRUNet_A(pretrained_weights = None,input_size = (256,256,1)):
+def AFE_MRUNet(pretrained_weights = None,input_size = (256,256,1)):
     kn = 45
     km1 = int(kn*0.167) + int(kn*0.333) + int(kn*0.5)
     km2 = int(kn*2*0.167) + int(kn*2*0.333) + int(kn*2*0.5)
@@ -845,7 +801,7 @@ def AFE_MRUNet_A(pretrained_weights = None,input_size = (256,256,1)):
     
     model = Model(inputs = inputs, outputs = conv10)
     
-    model.summary()
+    # model.summary()
     
 
     if(pretrained_weights):

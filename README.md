@@ -1,6 +1,6 @@
-# AFE-W-Net
+# EF3-Net
 
-2K-Fold-Net for Medical Image Segmentation with A Special Realization of AFE-W-Net Enhanced by AFE Modules.  
+2K-Fold-Net and Feature Enhanced 4-Fold-Net for Medical Image Segmentation.    
 
 Run train.py to train the model.  
 Run predict.py to generate the predicted segmentation.  

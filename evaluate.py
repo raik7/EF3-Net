@@ -1,69 +1,35 @@
+from sklearn.metrics import confusion_matrix
 import numpy as np
+from tensorflow.keras import backend as K
 import saveModel
 
 def evaluateModel(model, X_test, Y_test, batchSize, iters, results_save_path):
 
     yp = model.predict(x=X_test, batch_size=batchSize, verbose=1)
-
     yp = np.round(yp,0)
+    yp = yp.ravel().astype(int)
 
+    Y_test = np.round(Y_test,0)
+    Y_test = Y_test.ravel().astype(int)
+
+    c_matrix = confusion_matrix(Y_test, yp)
+    tn, fp, fn, tp = confusion_matrix(Y_test, yp).ravel()
+    
     jaccard = dice = ACC = SE = SP = PRE = 0.0
-    
-    for i in range(len(Y_test)):
-        tp = tn = fp = fn = acc = 0
-        
-        yp_2 = yp[i].ravel()
-        y2 = Y_test[i].ravel()
-        for i in range(len(y2)):
-            if y2[i] == 0:
-                if yp_2[i] ==0:
-                    tn += 1
-                    acc += 1
-                else:
-                    fp += 1
-            else:
-                if yp_2[i] ==0:
-                    fn += 1
-                else:
-                    tp += 1
-                    acc += 1
-        
-        
-        se = tp/(tp+fn+1)
-        SE = SE +se
 
-        sp = tn/(tn+fp+1)
-        SP = SP + sp
+    SE = tp/(tp+fn+1)
+    SP = tn/(tn+fp+1)
+    PRE = tp/(tp+fp+1)
+    ACC = (tn + tp) / (tn + fp + fn + tp)
+    jaccard = tp/(tp+fn+fp)
+    dice = 2*tp/(2*tp+fn+fp)
 
-        pre = tp/(tp+fp+1)
-        PRE = PRE + pre
-        
-        acc = acc / len(y2)
-        ACC = ACC + acc
-
-        intersection = yp_2 * y2
-        union = yp_2 + y2 - intersection
-
-        jaccard += (np.sum(intersection)/np.sum(union))  
-        dice += (2. * np.sum(intersection) ) / (np.sum(yp_2) + np.sum(y2))
-
-
-    jaccard /= len(Y_test)
-    dice /= len(Y_test)
-    PRE /= len(Y_test)
-    ACC /= len(Y_test)
-    SE /= len(Y_test)
-    SP /= len(Y_test)
-    
-    
     print('Jaccard Index : '+str(jaccard))
     print('Dice Coefficient : '+str(dice))
     print('PRE Coefficient : '+str(PRE))
     print('Accuracy : '+str(ACC))
     print('SE : '+str(SE))
     print('SP : '+str(SP))
-
-
 
     fp = open(results_save_path + '\\jaccard-{}.txt'.format(iters),'a')
     fp.write(str(jaccard)+'\n')
@@ -146,3 +112,4 @@ def evaluateModel(model, X_test, Y_test, batchSize, iters, results_save_path):
         fp = open(results_save_path + '\\best-sp-{}.txt'.format(iters),'w')
         fp.write(str(SP))
         fp.close()
+

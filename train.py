@@ -138,7 +138,7 @@ for i in range(0,5):
     y_train = np.concatenate((y_shuffled[:index-length],y_shuffled[index:]), axis=0)
     y_val = y_shuffled[index-length:index]
 
-    model = models.AFE_W_Net(pretrained_weights = pretrained_weights, input_size = input_size)
+    model = models.EF3_Net(pretrained_weights = pretrained_weights, input_size = input_size)
 
     print ('iter: %s' % (str(i)))
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy']) 

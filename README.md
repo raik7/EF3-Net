@@ -3,7 +3,7 @@
 2K-Fold-Net for Medical Image Segmentation with A Special Realization of AFE-W-Net Enhanced by AFE Modules.  
 
 Run train.py to train the models.  
-
+Run predict.py to generate the predicted segmentation.  
 
 ## Requirement
 tensorflow 2.0.1  

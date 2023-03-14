@@ -6,3 +6,4 @@
 ## Requirement
 tensorflow 2.0.1  
 
+Modify the paths to the dataset and save location in the train.py and then execute the script.

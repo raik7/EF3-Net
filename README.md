@@ -11,7 +11,7 @@ Citation: \
   pages={108625}, \
   year={2022}, \
   publisher={Elsevier} \
-} \
+} 
 
 ## Requirement
 tensorflow 2.0.1  

@@ -2,7 +2,7 @@
 
 ## 2K-Fold-Net and Feature Enhanced 4-Fold-Net for Medical Image Segmentation.    
 
-#Citation: \
+## Citation: \
 @article{zhang20222k, \
   title={2K-Fold-Net and feature enhanced 4-Fold-Net for medical image segmentation}, \
   author={Zhang, Yunchu and Dong, Jianfei}, \
